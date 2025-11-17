@@ -2,9 +2,8 @@ name: Weekly Supabase DB backup
 
 on:
   schedule:
-    # Kör varje söndag kl 03:00 UTC (justera vid behov)
-    - cron: "0 3 * * 0"
-  workflow_dispatch: {} # så du kan trigga manuellt från GitHub UI
+    - cron: "0 3 * * 0"   # Söndag kl 03:00 UTC
+  workflow_dispatch:
 
 jobs:
   backup:
@@ -14,12 +13,12 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install Supabase CLI
-        run: |
-          curl -fsSL https://cli.supabase.com/install | sh
-          echo "$HOME/.supabase/bin" >> $GITHUB_PATH
+      - name: Install Supabase CLI (official)
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
 
-      - name: Supabase link (configure project ref)
+      - name: Link Supabase project
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
@@ -35,8 +34,7 @@ jobs:
         run: |
           TS=$(date +"%Y%m%d_%H%M%S")
           FILE="db_backups/supabase_dump_${TS}.sql"
-          # --data-only om du bara vill ha data; ta bort flaggan för full dump
-          supabase db dump --instance "$SUPABASE_PROJECT_REF" --db-url "$SUPABASE_DB_URL" --file "$FILE" || supabase db dump --linked --file "$FILE"
+          supabase db dump --project-ref "$SUPABASE_PROJECT_REF" --file "$FILE"
           echo "Dumped to $FILE"
 
       - name: Upload backup as artifact
@@ -44,4 +42,3 @@ jobs:
         with:
           name: supabase-db-backup
           path: db_backups/
-          retention-days: 30
