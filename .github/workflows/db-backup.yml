@@ -28,13 +28,16 @@ jobs:
       - name: Create dump directory
         run: mkdir -p db_backups
 
-      - name: Dump database schema + data
+       - name: Dump database schema + data
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           TS=$(date +"%Y%m%d_%H%M%S")
           FILE="db_backups/supabase_dump_${TS}.sql"
-          supabase db dump --project-ref "$SUPABASE_PROJECT_REF" --file "$FILE"
+
+          # Använder det projekt som redan länkats av "supabase link"
+          supabase db dump --linked --file "$FILE"
+
           echo "Dumped to $FILE"
 
       - name: Upload backup as artifact
