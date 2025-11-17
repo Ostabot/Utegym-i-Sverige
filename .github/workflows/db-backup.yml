@@ -1,0 +1,47 @@
+name: Weekly Supabase DB backup
+
+on:
+  schedule:
+    # Kör varje söndag kl 03:00 UTC (justera vid behov)
+    - cron: "0 3 * * 0"
+  workflow_dispatch: {} # så du kan trigga manuellt från GitHub UI
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        run: |
+          curl -fsSL https://cli.supabase.com/install | sh
+          echo "$HOME/.supabase/bin" >> $GITHUB_PATH
+
+      - name: Supabase link (configure project ref)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          supabase link --project-ref "$SUPABASE_PROJECT_REF" --debug
+
+      - name: Create dump directory
+        run: mkdir -p db_backups
+
+      - name: Dump database schema + data
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          TS=$(date +"%Y%m%d_%H%M%S")
+          FILE="db_backups/supabase_dump_${TS}.sql"
+          # --data-only om du bara vill ha data; ta bort flaggan för full dump
+          supabase db dump --instance "$SUPABASE_PROJECT_REF" --db-url "$SUPABASE_DB_URL" --file "$FILE" || supabase db dump --linked --file "$FILE"
+          echo "Dumped to $FILE"
+
+      - name: Upload backup as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-db-backup
+          path: db_backups/
+          retention-days: 30
