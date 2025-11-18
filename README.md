@@ -2,25 +2,54 @@
 
 Expo/React Native-app för att upptäcka utegym, planera träningspass och dela pass genom Supabase.
 
-## Kom igång
+## Kvalitetsplan inför TestFlight / release
 
-1. Installera beroenden:
-   ```bash
-   npm install
-   ```
-2. Lägg in Supabase-konfiguration i `app.json` (`supabaseUrl`, `supabaseAnon`).
-3. Starta utvecklingsservern:
-   ```bash
-   npm start
-   ```
-4. Kör tester:
-   ```bash
-   npm test
-   ```
+### Autentisering
 
-## Miljövariabler
+- **Google login**  
+  - Implementerad via Supabase OAuth.
+  - Redirect/deeplink: `utegym://auth/callback` (registrerad som `scheme` i `app.config.ts` och som Redirect URL i Supabase).
+  - Testat i simulator/dev-client med Tobias som test user i Google-konsolen.
 
-Expo läser Supabase-variabler via `app.json` → `expo.extra`. För lokal utveckling kan du använda `.env` och `app.config.js` om du vill byta projekt.
+- **Sign in with Apple**  
+  - *Planerad, ej implementerad ännu.*  
+  - Krav inför App Store **production**, men inte för första TestFlight-rundorna.
+  - Att göra:
+    - Aktivera **Sign in with Apple** på bundle identifier `org.name.utegymisverige` i Apple Developer.
+    - Lägga till Apple som provider i Supabase (Services ID + redirect).
+    - Implementera sign-in-knapp i appen och koppla till Supabase.
+
+### Monitoring / loggar
+
+- **Sentry**  
+  - *Planerad, ej aktiv just nu.*  
+  - Tidigare test med `sentry-expo` backades ur p.g.a. pod/RC-Folly-strul efter uppgradering till React Native 0.81.
+  - Plan:
+    - Återinföra Sentry när RN/Expo + Sentry har stabil integration.
+    - Starta med endast JS-errors + basic performance (ingen native-customisering i första skedet).
+
+### Testning
+
+- **E2E-tester (Detox)**  
+  - *Planerad, ej implementerad ännu.*  
+  - Mål på sikt:
+    1. Skapa pass (från gym → välj utrustning → generera pass).
+    2. Markera sets som genomförda.
+    3. Avsluta pass.
+    4. Kontrollera att passet dyker upp i historiken.
+  - Initialt fokuserar vi på manuella “happy path”-tester innan varje TestFlight-build.
+
+### Manuella release-tester (kort checklista)
+
+- Starta appen online och offline.
+- Hitta gym nära mig (location + karta).
+- Generera ett pass och köra igenom hela flödet.
+- Testa Google-login från:
+  - kallstart
+  - när appen redan är öppen.
+- Logga ut / logga in igen.
+- Kontrollera att inga uppenbara krascher eller blockers finns.
+
 
 ## Funktioner
 
