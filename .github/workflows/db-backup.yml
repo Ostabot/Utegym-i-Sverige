@@ -1,4 +1,4 @@
-name: Weekly Supabase DB backup
+name: Weekly Supabase DB backup v1
 
 on:
   schedule:
